@@ -81,7 +81,37 @@
             display: flex;
             gap: 0.5rem;
             margin-bottom: 0.75rem;
+            position: relative;
         }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 2px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .search-results:empty { display: none; }
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: var(--bg-input); }
+        .search-result-item .name { font-weight: 600; color: var(--text-primary); }
+        .search-result-item .addr { font-size: 0.8rem; color: var(--text-secondary); }
 
         .input-section .link-input-wrapper input {
             flex: 1;
@@ -232,7 +262,7 @@
             position: fixed;
             inset: 0;
             z-index: 2000;
-            background: var(--bg-main);
+            background: #f8f9fa;
             flex-direction: column;
         }
 
@@ -241,28 +271,40 @@
         }
 
         .sort-modal-header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--bg-card);
+            background: var(--accent);
             flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(192,57,43,0.25);
         }
 
         .sort-modal-header h3 {
             font-size: 1.1rem;
-            color: var(--text-primary);
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+            flex: 1;
+            padding-right: 0.5rem;
         }
 
         .sort-modal-close {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border: none;
-            background: var(--bg-input);
-            border-radius: 8px;
-            font-size: 1.5rem;
+            background: rgba(255,255,255,0.25);
+            border-radius: 10px;
+            font-size: 1.4rem;
+            color: #fff;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sort-modal-close:hover {
+            background: rgba(255,255,255,0.4);
         }
 
         .sort-modal-list {
@@ -276,50 +318,79 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 1rem;
-            background: var(--bg-card);
+            padding: 1rem 1rem;
+            background: #fff;
             border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
             border-radius: 12px;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             cursor: grab;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
 
         .sort-modal-item:active {
             cursor: grabbing;
         }
 
-        .sort-modal-item .drag-handle {
-            color: var(--text-secondary);
-            font-size: 1.2rem;
+        .sort-modal-item .sort-modal-num {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
         }
 
-        .sort-modal-item span {
+        .sort-modal-item .drag-handle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            padding: 0.2rem;
+        }
+
+        .sort-modal-item .sort-modal-name {
             flex: 1;
+            min-width: 0;
             font-weight: 500;
             color: var(--text-primary);
+            line-height: 1.35;
+            font-size: 0.95rem;
         }
 
         .sort-modal-item.dragging {
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
         .sort-modal-item.drag-over {
-            border-color: var(--accent);
-            background: rgba(192,57,43,0.08);
+            border-left-color: var(--accent-hover);
+            background: rgba(192,57,43,0.06);
+            box-shadow: 0 2px 8px rgba(192,57,43,0.15);
         }
 
         .sort-modal-remove {
-            background: none;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            background: rgba(192,57,43,0.12);
             border: none;
-            color: var(--text-secondary);
+            border-radius: 10px;
+            color: var(--accent);
             cursor: pointer;
             font-size: 1.2rem;
             line-height: 1;
-            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .sort-modal-remove:hover {
-            color: var(--accent);
+        .sort-modal-remove:hover, .sort-modal-remove:active {
+            background: rgba(192,57,43,0.2);
+            color: var(--accent-hover);
         }
 
         .icon-btn-mobile {
@@ -353,14 +424,6 @@
             flex-direction: column;
             gap: 1rem;
             min-height: 0;
-        }
-
-        .places-list.places-list-hidden {
-            display: none !important;
-        }
-
-        #placesTitle {
-            display: none !important;
         }
 
         .place-card {
@@ -635,6 +698,9 @@
         }
 
         @media (max-width: 900px) {
+            .places-list.places-list-hidden { display: none !important; }
+            #placesTitle { display: none !important; }
+
             body {
                 overflow-x: hidden;
             }
@@ -732,14 +798,15 @@
             <div class="input-section">
                 <label>Πρόσθεσε μέρος</label>
                 <div class="link-input-wrapper">
-                    <input type="text" id="mapLinkInput" placeholder="Link from Google Maps" 
+                    <input type="text" id="mapLinkInput" placeholder="Link ή αναζήτησε μέρος" autocomplete="off"
                            onkeypress="if(event.key==='Enter') addPlace()">
                     <button class="btn btn-primary" onclick="addPlace()">Προσθήκη</button>
+                    <div class="search-results" id="searchResults"></div>
                 </div>
                 <div class="icon-btn-row">
                     <button class="icon-btn icon-btn-mobile" id="sortBtn" onclick="openSortModal()" style="display:none" title="Ταξινόμηση σειράς">↕</button>
                     <button class="btn btn-sort-places" id="sortPlacesBtn" onclick="openSortModal()" style="display:none">Ταξινόμηση</button>
-                    <button class="share-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link"><span class="share-text">SHARE</span><span class="share-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></span></button>
+                    <button class="share-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link"><span class="share-text">Share</span><span class="share-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></span></button>
                     <button class="icon-btn" onclick="clearAll()" title="Καθαρισμός όλων">🗑</button>
                 </div>
             </div>
@@ -749,8 +816,8 @@
             </div>
             <div class="places-list places-list-hidden" id="placesList">
                 <div class="empty-state" id="emptyState">
-                    <p><strong>Πρόσθεσε πολλά links από Google Maps</strong></p>
-                    <p>Θα δεις ταυτόχρονα για όλα: φωτογραφίες, αξιολογήσεις, ωράριο και αποστάσεις!</p>
+                    <p><strong>Πρόσθεσε μέρη με link ή αναζήτηση</strong></p>
+                    <p>Επικόλλησε link από Google Maps ή αναζήτησε μέρος και διάλεξε από τα αποτελέσματα. Θα δεις φωτογραφίες, αξιολογήσεις, ωράριο και αποστάσεις!</p>
                 </div>
             </div>
         </aside>
@@ -835,13 +902,10 @@
                     const point = proj.fromLatLngToDivPixel(this.position);
                     if (point) {
                         const zoom = this.map && this.map.getZoom ? this.map.getZoom() : 0;
-                        const isMobile = window.innerWidth <= 900;
                         let scale = 1;
-                        if (isMobile) {
-                            if (zoom <= 9) scale = 0.62;
-                            else if (zoom <= 11) scale = 0.75;
-                            else if (zoom <= 13) scale = 0.9;
-                        }
+                        if (zoom <= 9) scale = 0.62;
+                        else if (zoom <= 11) scale = 0.75;
+                        else if (zoom <= 13) scale = 0.9;
                         this.div.style.left = point.x + 'px';
                         this.div.style.top = (point.y + 25) + 'px';
                         this.div.style.transformOrigin = 'top center';
@@ -974,7 +1038,99 @@
             });
             log('initMap: OK - Χάρτης έτοιμος');
             loadPlacesFromUrl();
+            initSearch();
             window.addEventListener('resize', updateSortButtonVisibility);
+        }
+
+        let searchDebounceTimer;
+        function looksLikeUrl(text) {
+            if (!text || text.length < 10) return false;
+            return /google\.com\/maps|maps\.google|ChIJ[a-zA-Z0-9_-]{20,}|@-?\d+\.?\d*,-?\d+\.?\d*/.test(text);
+        }
+        function initSearch() {
+            const input = document.getElementById('mapLinkInput');
+            const searchResults = document.getElementById('searchResults');
+            if (!input || !searchResults) return;
+            input.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimer);
+                const q = input.value.trim();
+                searchResults.innerHTML = '';
+                if (q.length < 2 || looksLikeUrl(q)) return;
+                searchDebounceTimer = setTimeout(() => runSearch(q, searchResults, input), 350);
+            });
+            input.addEventListener('blur', () => {
+                setTimeout(() => { searchResults.innerHTML = ''; }, 200);
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const first = searchResults.querySelector('.search-result-item[data-place-id]');
+                    if (first) {
+                        e.preventDefault();
+                        selectSearchResult(first.dataset.placeId, searchResults, input);
+                    }
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !searchResults.contains(e.target)) searchResults.innerHTML = '';
+            });
+        }
+
+        function runSearch(query, resultsEl, inputEl) {
+            if (!placesService || !map) return;
+            resultsEl.innerHTML = '<div class="search-result-item" style="cursor:default;color:var(--text-secondary)">⏳ Αναζήτηση...</div>';
+            const bounds = map.getBounds();
+            const request = {
+                query,
+                bounds: bounds || new google.maps.LatLngBounds(
+                    new google.maps.LatLng(34, 19),
+                    new google.maps.LatLng(42, 30)
+                )
+            };
+            placesService.textSearch(request, (results, status) => {
+                resultsEl.innerHTML = '';
+                if (status !== google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
+                    resultsEl.innerHTML = '<div class="search-result-item" style="cursor:default;color:var(--text-secondary)">Δεν βρέθηκε τίποτα</div>';
+                    return;
+                }
+                results.slice(0, 8).forEach((p) => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.dataset.placeId = p.place_id;
+                    const wrap = document.createElement('div');
+                    const name = document.createElement('span');
+                    name.className = 'name';
+                    name.textContent = p.name || '';
+                    const addr = document.createElement('div');
+                    addr.className = 'addr';
+                    addr.textContent = p.formatted_address || p.vicinity || '';
+                    wrap.appendChild(name);
+                    wrap.appendChild(addr);
+                    div.appendChild(wrap);
+                    div.addEventListener('click', () => selectSearchResult(p.place_id, resultsEl, inputEl));
+                    resultsEl.appendChild(div);
+                });
+            });
+        }
+
+        async function selectSearchResult(placeId, resultsEl, inputEl) {
+            resultsEl.innerHTML = '';
+            if (inputEl) inputEl.value = '';
+            const loadingCard = createLoadingCard();
+            document.getElementById('placesList').appendChild(loadingCard);
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('placesTitle').style.display = 'block';
+            try {
+                const placeData = await getPlaceDetails(placeId);
+                addPlaceToMap(placeData);
+                places.push(placeData);
+                updateDistances();
+                updateShareButtonVisibility();
+                savePlacesToStorage();
+            } catch (err) {
+                alert('Σφάλμα: ' + (err.message || 'Δεν ήταν δυνατή η φόρτωση του μέρους'));
+            } finally {
+                loadingCard.remove();
+            }
         }
 
         function togglePlaceCard(placeIdent) {
@@ -1043,11 +1199,16 @@
             const url = input.value.trim();
             if (!url) return;
 
-            log('addPlace: Ξεκινάμε για URL...');
-            const parsed = parseGoogleMapsUrl(url);
+            log('addPlace: Ξεκινάμε...');
+            let parsed = parseGoogleMapsUrl(url);
             if (!parsed) {
-                alert('Μη έγκυρο link. Χρησιμοποίησε ένα πλήρες link από το Google Maps (π.χ. google.com/maps/place/...)');
-                return;
+                const firstResult = document.getElementById('searchResults')?.querySelector('.search-result-item[data-place-id]');
+                if (firstResult) {
+                    input.value = '';
+                    selectSearchResult(firstResult.dataset.placeId, document.getElementById('searchResults'), input);
+                    return;
+                }
+                parsed = { type: 'text', query: url };
             }
 
             input.value = '';
@@ -1550,7 +1711,8 @@
                 div.className = 'sort-modal-item';
                 div.draggable = true;
                 div.dataset.placeId = ident;
-                div.innerHTML = `<span class="drag-handle">⋮⋮</span><span>${i + 1}. ${p.name}</span><button class="sort-modal-remove" onclick="event.stopPropagation(); removePlace('${ident}'); closeSortModal();" title="Αφαίρεση">×</button>`;
+                const esc = (s) => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                div.innerHTML = `<span class="sort-modal-num">${i + 1}</span><span class="drag-handle">⋮⋮</span><span class="sort-modal-name">${esc(p.name)}</span><button class="sort-modal-remove" onclick="event.stopPropagation(); removePlace('${ident}'); closeSortModal();" title="Αφαίρεση">×</button>`;
                 div.addEventListener('dragstart', (e) => {
                     div.classList.add('dragging');
                     e.dataTransfer.setData('text/plain', ident);
