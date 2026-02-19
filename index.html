@@ -35,36 +35,8 @@
         .app-container {
             display: grid;
             grid-template-columns: 420px 1fr;
-            grid-template-rows: auto 1fr;
+            grid-template-rows: 1fr;
             height: 100vh;
-        }
-
-        /* Header - burnt orange */
-        .header {
-            grid-column: 1 / -1;
-            background: var(--accent);
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .header-content h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
-        }
-
-        .header-content .subtitle {
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.9);
-            margin-top: 0.25rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
         }
 
         /* Sidebar - white card */
@@ -146,6 +118,32 @@
             background: var(--bg-input);
         }
 
+        .icon-btn-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-input);
+            border-color: var(--accent);
+        }
+
         .sidebar-section-title {
             font-size: 0.9rem;
             font-weight: 600;
@@ -219,6 +217,11 @@
             font-size: 1rem;
             font-weight: 600;
             color: var(--text-primary);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
         }
 
         .place-remove {
@@ -346,6 +349,15 @@
             padding: 0.5rem 0;
             font-size: 0.85rem;
             border-bottom: 1px solid var(--border);
+            gap: 0.5rem;
+        }
+
+        .distance-row span:first-child {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .distance-row:last-child {
@@ -421,28 +433,68 @@
         @media (max-width: 900px) {
             .app-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto auto 1fr;
+                grid-template-rows: 1fr 1fr;
             }
 
             .sidebar {
-                max-height: 40vh;
+                max-height: 50vh;
+                min-height: 200px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .input-section {
+                flex-shrink: 0;
+            }
+
+            .distances-section {
+                flex-shrink: 0;
+            }
+
+            .sidebar-section-title {
+                flex-shrink: 0;
+            }
+
+            .places-list {
+                flex: 1;
+                min-height: 120px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .place-card {
+                flex-shrink: 0;
+                min-height: 60px;
+            }
+
+            .place-card h3 {
+                font-size: 0.95rem;
+                line-height: 1.3;
+            }
+
+            .link-input-wrapper {
+                flex-wrap: wrap;
+            }
+
+            .link-input-wrapper input {
+                min-width: 0;
+            }
+
+            .icon-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+
+            .map-container {
+                margin: 0.5rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header class="header">
-            <div class="header-content">
-                <h1>Google Maps Explorer</h1>
-                <p class="subtitle">Πρόσθεσε πολλά μέρη, εξερεύνησε αποστάσεις, αξιολογήσεις και λεπτομέρειες</p>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-secondary" id="shareBtn" onclick="copyShareLink()" style="display:none">📤 Κοινή χρήση link</button>
-                <button class="btn btn-secondary" onclick="clearAll()">Καθαρισμός όλων</button>
-            </div>
-        </header>
-
         <aside class="sidebar">
             <div class="input-section">
                 <label>Πρόσθεσε μέρος</label>
@@ -453,8 +505,12 @@
                 </div>
                 <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
                     Επικόλλησε link από Google Maps.
-                    <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;" style="color: var(--accent);">Δοκιμή</a>
+                    <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;" style="color: var(--text-secondary);">Δοκιμή</a>
                 </p>
+                <div class="icon-btn-row">
+                    <button class="icon-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link">📤</button>
+                    <button class="icon-btn" onclick="clearAll()" title="Καθαρισμός όλων">🗑</button>
+                </div>
             </div>
 
             <div class="distances-section" id="distancesSection" style="display: none;">
@@ -1201,7 +1257,7 @@
 
         function updateShareButtonVisibility() {
             const btn = document.getElementById('shareBtn');
-            if (btn) btn.style.display = places.length > 0 ? 'inline-block' : 'none';
+            if (btn) btn.style.display = places.length > 0 ? 'flex' : 'none';
         }
 
         const STORAGE_KEY = 'mapsExplorer_places';
