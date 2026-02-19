@@ -1861,7 +1861,7 @@
             const data = buildShareData();
             const base = window.location.origin + window.location.pathname;
             const url = base + (window.location.search ? '&' : '?') + 'p=' + encodeURIComponent(data);
-            navigator.clipboard.writeText(url).then(() => alert('Link αντιγράφηκε! Κοινότυπέ το για να μοιραστείς τα μέρη σου.')).catch(() => prompt('Αντιγράψε το link:', url));
+            navigator.clipboard.writeText(url).then(() => alert('Link Αντιγράφηκε')).catch(() => prompt('Αντιγράψε το link:', url));
         }
 
         function copyShareFullMapLink() {
@@ -1869,7 +1869,7 @@
             const data = buildShareData();
             const base = window.location.origin + window.location.pathname;
             const url = base + '?p=' + encodeURIComponent(data) + '&full=1';
-            navigator.clipboard.writeText(url).then(() => alert('Link full map αντιγράφηκε! Άνοιξε το για χάρτη full screen.')).catch(() => prompt('Αντιγράψε το link:', url));
+            navigator.clipboard.writeText(url).then(() => alert('Link Αντιγράφηκε')).catch(() => prompt('Αντιγράψε το link:', url));
         }
 
         function applyFullMapMode() {
