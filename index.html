@@ -1868,12 +1868,31 @@
             else localStorage.setItem(STORAGE_KEY, buildShareData());
         }
 
+        function copyToClipboardAndAlert(text) {
+            navigator.clipboard.writeText(text).then(() => alert('Link Αντιγράφηκε')).catch(() => prompt('Αντιγράψε το link:', text));
+        }
+
+        function shortenUrl(longUrl, done) {
+            const cb = 'isgd_' + Date.now();
+            window[cb] = (r) => {
+                delete window[cb];
+                script.parentNode?.removeChild(script);
+                if (r.shorturl) done(r.shorturl);
+                else done(longUrl);
+            };
+            const script = document.createElement('script');
+            script.src = 'https://is.gd/create.php?format=json&callback=' + cb + '&url=' + encodeURIComponent(longUrl);
+            document.head.appendChild(script);
+            script.onerror = () => { if (window[cb]) { delete window[cb]; script.parentNode?.removeChild(script); done(longUrl); } };
+            setTimeout(() => { if (window[cb]) { delete window[cb]; script.parentNode?.removeChild(script); done(longUrl); } }, 5000);
+        }
+
         function copyShareLink() {
             if (places.length === 0) return;
             const data = buildShareData();
             const base = window.location.origin + window.location.pathname;
             const url = base + (window.location.search ? '&' : '?') + 'p=' + encodeURIComponent(data);
-            navigator.clipboard.writeText(url).then(() => alert('Link Αντιγράφηκε')).catch(() => prompt('Αντιγράψε το link:', url));
+            shortenUrl(url, (final) => copyToClipboardAndAlert(final));
         }
 
         function copyShareFullMapLink() {
@@ -1881,7 +1900,7 @@
             const data = buildShareData();
             const base = window.location.origin + window.location.pathname;
             const url = base + '?p=' + encodeURIComponent(data) + '&full=1';
-            navigator.clipboard.writeText(url).then(() => alert('Link Αντιγράφηκε')).catch(() => prompt('Αντιγράψε το link:', url));
+            shortenUrl(url, (final) => copyToClipboardAndAlert(final));
         }
 
         function applyFullMapMode() {
