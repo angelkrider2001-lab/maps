@@ -24,12 +24,18 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg-main);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            max-width: 100%;
         }
 
         .app-container {
@@ -37,6 +43,8 @@
             grid-template-columns: 420px 1fr;
             grid-template-rows: 1fr auto;
             height: 100vh;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         .map-container {
@@ -57,14 +65,15 @@
 
         .input-section {
             padding: 1.25rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            background: #2c3e50;
         }
 
         .input-section label {
             display: block;
             font-size: 0.9rem;
             font-weight: 600;
-            color: var(--text-primary);
+            color: white;
             margin-bottom: 0.5rem;
         }
 
@@ -74,24 +83,58 @@
             margin-bottom: 0.75rem;
         }
 
-        .link-input-wrapper input {
+        .input-section .link-input-wrapper input {
             flex: 1;
             padding: 0.75rem 1rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 8px;
-            color: var(--text-primary);
+            color: white;
             font-size: 0.9rem;
             font-family: inherit;
         }
 
-        .link-input-wrapper input::placeholder {
-            color: var(--text-secondary);
+        .input-section .link-input-wrapper input::placeholder {
+            color: rgba(255,255,255,0.6);
         }
 
-        .link-input-wrapper input:focus {
+        .input-section .link-input-wrapper input:focus {
             outline: none;
-            border-color: var(--accent);
+            border-color: white;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .input-section .btn-primary {
+            background: white;
+            color: #2c3e50;
+        }
+
+        .input-section .btn-primary:hover {
+            background: rgba(255,255,255,0.9);
+        }
+
+        .input-section p {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .input-section p a {
+            color: rgba(255,255,255,0.95);
+            text-decoration: underline;
+        }
+
+        .input-section p a:hover {
+            color: white;
+        }
+
+        .input-section .icon-btn {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        .input-section .icon-btn:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: white;
         }
 
         .btn {
@@ -241,6 +284,16 @@
             color: var(--text-primary);
             padding: 0.75rem 1rem 0.5rem;
             border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .btn-sort-places {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
 
         .places-list {
@@ -470,6 +523,7 @@
             box-shadow: var(--shadow);
             background: var(--bg-card);
             border: 1px solid var(--border);
+            min-width: 0;
         }
 
         #map {
@@ -524,13 +578,30 @@
         }
 
         @media (max-width: 900px) {
+            body {
+                overflow-x: hidden;
+            }
+
             .app-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
                 grid-template-rows: 1fr 1fr auto;
+                width: 100%;
+                min-width: 0;
+            }
+
+            .sidebar {
+                min-width: 0;
+                max-height: 50vh;
+                min-height: 200px;
+                overflow: hidden;
+                overflow-x: hidden;
+                display: flex;
+                flex-direction: column;
             }
 
             .map-container {
                 grid-row: auto;
+                min-width: 0;
             }
 
             .distances-section.distances-below-map {
@@ -539,14 +610,7 @@
                 margin: 0 0.5rem 0.5rem;
                 border-radius: 12px;
                 border: 1px solid var(--border);
-            }
-
-            .sidebar {
-                max-height: 50vh;
-                min-height: 200px;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
+                min-width: 0;
             }
 
             .input-section {
@@ -565,12 +629,14 @@
                 flex: 1;
                 min-height: 120px;
                 overflow-y: auto;
+                overflow-x: hidden;
                 -webkit-overflow-scrolling: touch;
             }
 
             .place-card {
                 flex-shrink: 0;
                 min-height: 60px;
+                overflow-x: hidden;
             }
 
             .place-card h3 {
@@ -612,9 +678,9 @@
                            onkeypress="if(event.key==='Enter') addPlace()">
                     <button class="btn btn-primary" onclick="addPlace()">Προσθήκη</button>
                 </div>
-                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                <p style="font-size: 0.75rem; margin-top: 0.5rem;">
                     Επικόλλησε link από Google Maps.
-                    <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;" style="color: var(--text-secondary);">Δοκιμή</a>
+                    <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;">Δοκιμή</a>
                 </p>
                 <div class="icon-btn-row">
                     <button class="icon-btn icon-btn-mobile" id="sortBtn" onclick="openSortModal()" style="display:none" title="Ταξινόμηση σειράς">↕</button>
@@ -623,7 +689,10 @@
                 </div>
             </div>
 
-            <div class="sidebar-section-title" id="placesTitle" style="display: none;">📍 Τα μέρη σου — πάτα 🦌 για λεπτομέρειες</div>
+            <div class="sidebar-section-title" id="placesTitle" style="display: none;">
+                <span>📍 Τα μέρη σου — πάτα 🦌 για λεπτομέρειες</span>
+                <button class="btn btn-secondary btn-sort-places" id="sortPlacesBtn" onclick="openSortModal()" style="display:none">Ταξινόμηση</button>
+            </div>
             <div class="places-list" id="placesList">
                 <div class="empty-state" id="emptyState">
                     <p><strong>Πρόσθεσε πολλά links από Google Maps</strong></p>
@@ -1381,8 +1450,10 @@
         }
 
         function updateSortButtonVisibility() {
-            const btn = document.getElementById('sortBtn');
-            if (btn) btn.style.display = (places.length >= 2 && window.innerWidth <= 900) ? 'flex' : 'none';
+            const iconBtn = document.getElementById('sortBtn');
+            if (iconBtn) iconBtn.style.display = (places.length >= 2 && window.innerWidth <= 900) ? 'flex' : 'none';
+            const placesBtn = document.getElementById('sortPlacesBtn');
+            if (placesBtn) placesBtn.style.display = places.length >= 2 ? 'inline-block' : 'none';
         }
 
         function openSortModal() {
