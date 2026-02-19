@@ -9,7 +9,7 @@
         :root {
             --accent: #c0392b;
             --accent-hover: #a93226;
-            --bg-main: #f0efeb;
+            --bg-main: #ffffff;
             --bg-card: #ffffff;
             --bg-input: #f5f5f5;
             --text-primary: #2c3e50;
@@ -65,15 +65,15 @@
 
         .input-section {
             padding: 1.25rem;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            background: var(--accent-hover);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-card);
         }
 
         .input-section label {
             display: block;
             font-size: 0.9rem;
             font-weight: 600;
-            color: white;
+            color: var(--text-primary);
             margin-bottom: 0.5rem;
         }
 
@@ -86,8 +86,8 @@
         .input-section .link-input-wrapper input {
             flex: 1;
             padding: 0.75rem 1rem;
-            background: rgba(255,255,255,0.95);
-            border: 1px solid rgba(255,255,255,0.5);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text-primary);
             font-size: 0.9rem;
@@ -100,42 +100,37 @@
 
         .input-section .link-input-wrapper input:focus {
             outline: none;
-            border-color: white;
+            border-color: var(--accent);
         }
 
         .input-section .btn-primary {
-            background: white;
-            color: var(--accent);
+            background: var(--accent);
+            color: white;
         }
 
         .input-section .btn-primary:hover {
-            background: rgba(255,255,255,0.9);
-        }
-
-        .input-section p,
-        .input-section p a {
-            color: rgba(255,255,255,0.95);
+            background: var(--accent-hover);
         }
 
         .input-section .icon-btn {
-            background: white;
-            border-color: rgba(255,255,255,0.5);
-            color: var(--accent);
+            background: var(--accent);
+            border-color: transparent;
+            color: white;
         }
 
         .input-section .icon-btn:hover {
-            background: rgba(255,255,255,0.9);
+            background: var(--accent-hover);
         }
 
         .btn-sort-places,
         .input-section .btn-sort-places {
-            background: white !important;
-            color: var(--accent) !important;
-            border: 1px solid rgba(255,255,255,0.5) !important;
+            background: var(--accent) !important;
+            color: white !important;
+            border: none !important;
         }
 
         .btn-sort-places:hover {
-            background: rgba(255,255,255,0.9) !important;
+            background: var(--accent-hover) !important;
         }
 
         .btn {
@@ -699,14 +694,10 @@
             <div class="input-section">
                 <label>Πρόσθεσε μέρος</label>
                 <div class="link-input-wrapper">
-                    <input type="text" id="mapLinkInput" placeholder="https://www.google.com/maps/place/..." 
+                    <input type="text" id="mapLinkInput" placeholder="Link from Google Maps" 
                            onkeypress="if(event.key==='Enter') addPlace()">
                     <button class="btn btn-primary" onclick="addPlace()">Προσθήκη</button>
                 </div>
-                <p style="font-size: 0.75rem; color: rgba(255,255,255,0.95); margin-top: 0.5rem;">
-                    Επικόλλησε link από Google Maps.
-                    <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;" style="color: rgba(255,255,255,0.95);">Δοκιμή</a>
-                </p>
                 <div class="icon-btn-row">
                     <button class="icon-btn icon-btn-mobile" id="sortBtn" onclick="openSortModal()" style="display:none" title="Ταξινόμηση σειράς">↕</button>
                     <button class="btn btn-sort-places" id="sortPlacesBtn" onclick="openSortModal()" style="display:none">Ταξινόμηση</button>
@@ -805,8 +796,18 @@
                     if (!proj) return;
                     const point = proj.fromLatLngToDivPixel(this.position);
                     if (point) {
-                        this.div.style.left = (point.x - this.div.offsetWidth / 2) + 'px';
+                        const zoom = this.map && this.map.getZoom ? this.map.getZoom() : 0;
+                        const isMobile = window.innerWidth <= 900;
+                        let scale = 1;
+                        if (isMobile) {
+                            if (zoom <= 9) scale = 0.62;
+                            else if (zoom <= 11) scale = 0.75;
+                            else if (zoom <= 13) scale = 0.9;
+                        }
+                        this.div.style.left = point.x + 'px';
                         this.div.style.top = (point.y + 25) + 'px';
+                        this.div.style.transformOrigin = 'top center';
+                        this.div.style.transform = `translateX(-50%) scale(${scale})`;
                     }
                 }
                 onRemove() {
