@@ -389,26 +389,6 @@
             font-size: 0.9rem;
         }
 
-        .log-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            max-height: 250px;
-            background: var(--text-primary);
-            padding: 1rem;
-            overflow-y: auto;
-            font-family: 'Consolas', monospace;
-            font-size: 0.75rem;
-            color: white;
-            z-index: 1000;
-            display: none;
-        }
-
-        .log-panel.visible {
-            display: block;
-        }
-
         .map-type-toggle {
             position: absolute;
             top: 12px;
@@ -458,8 +438,7 @@
                 <p class="subtitle">Πρόσθεσε πολλά μέρη, εξερεύνησε αποστάσεις, αξιολογήσεις και λεπτομέρειες</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-secondary" onclick="toggleLogs()">📋 Logs</button>
-                <button class="btn btn-secondary" onclick="copyLogs()">📤 Αντίγραψε logs</button>
+                <button class="btn btn-secondary" id="shareBtn" onclick="copyShareLink()" style="display:none">📤 Κοινή χρήση link</button>
                 <button class="btn btn-secondary" onclick="clearAll()">Καθαρισμός όλων</button>
             </div>
         </header>
@@ -501,38 +480,13 @@
             <div id="map"></div>
         </main>
 
-        <div class="log-panel" id="logPanel">
-            <div style="margin-bottom: 0.5rem; font-weight: bold;">📋 Debug Logs</div>
-            <div id="logContent"></div>
-        </div>
     </div>
 
     <script>
         const API_KEY = 'AIzaSyDc__yRSw8pvfjlthJ6YlQ9AH8qbbZXXCg';
         let map;
-        const logs = [];
 
-        function log(msg, type = 'info') {
-            const t = new Date().toLocaleTimeString('el-GR');
-            const entry = { t, msg, type };
-            logs.push(entry);
-            const el = document.getElementById('logContent');
-            if (el) {
-                const div = document.createElement('div');
-                div.className = 'log-entry log-' + type;
-                div.textContent = `[${t}] ${msg}`;
-                el.appendChild(div);
-            }
-        }
-
-        function toggleLogs() {
-            document.getElementById('logPanel').classList.toggle('visible');
-        }
-
-        function copyLogs() {
-            const text = logs.map(l => `[${l.t}] ${l.msg}`).join('\n');
-            navigator.clipboard.writeText(text).then(() => alert('Logs αντιγράφηκαν!')).catch(() => prompt('Αντιγράψε manually:', text));
-        }
+        function log() {} // no-op
         let placesService;
         let geocoder;
         let markers = [];
@@ -712,6 +666,7 @@
                 label.setMap(map);
             });
             log('initMap: OK - Χάρτης έτοιμος');
+            loadPlacesFromUrl();
         }
 
         function togglePlaceCard(placeIdent) {
@@ -813,6 +768,7 @@
                     addPlaceToMap(placeData);
                     places.push(placeData);
                     updateDistances();
+                    updateShareButtonVisibility();
                 } else {
                     throw new Error('Δεν βρέθηκε το μέρος');
                 }
@@ -1164,15 +1120,15 @@
             updateDistances();
         }
 
-        function removePlace(placeId) {
-            const idx = markers.findIndex(m => (m.place.place_id || 'loc_' + m.place.geometry.location.lat() + '_' + m.place.geometry.location.lng()) === placeId);
+        function removePlace(placeIdent) {
+            const idx = markers.findIndex(m => (m.place.place_id || 'loc_' + m.place.geometry.location.lat() + '_' + m.place.geometry.location.lng()) === placeIdent);
             if (idx >= 0) {
                 markers[idx].marker.setMap(null);
                 if (markers[idx].overlay) markers[idx].overlay.setMap(null);
                 markers.splice(idx, 1);
                 places.splice(idx, 1);
             }
-            document.querySelector(`[data-place-id="${placeId}"]`)?.remove();
+            document.querySelector(`[data-place-id="${placeIdent}"]`)?.remove();
             if (places.length === 0) {
                 document.getElementById('emptyState').style.display = 'block';
                 document.getElementById('placesTitle').style.display = 'none';
@@ -1181,6 +1137,7 @@
             } else {
                 updateDistances();
             }
+            updateShareButtonVisibility();
         }
 
         function updateDistances() {
@@ -1235,6 +1192,62 @@
             placesList.innerHTML = '<div class="empty-state" id="emptyState"><p><strong>Πρόσθεσε πολλά links από Google Maps</strong></p><p>Θα δεις ταυτόχρονα για όλα: φωτογραφίες, αξιολογήσεις, ωράριο και αποστάσεις!</p></div>';
             document.getElementById('placesTitle').style.display = 'none';
             document.getElementById('distancesSection').style.display = 'none';
+            updateShareButtonVisibility();
+        }
+
+        function updateShareButtonVisibility() {
+            const btn = document.getElementById('shareBtn');
+            if (btn) btn.style.display = places.length > 0 ? 'inline-block' : 'none';
+        }
+
+        function buildShareData() {
+            return places.map(p => {
+                if (p.place_id && p.place_id.startsWith('ChIJ')) return p.place_id;
+                const loc = p.geometry.location;
+                const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
+                const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
+                return `${lat.toFixed(5)}~${lng.toFixed(5)}`;
+            }).join('|');
+        }
+
+        function copyShareLink() {
+            if (places.length === 0) return;
+            const data = buildShareData();
+            const base = window.location.origin + window.location.pathname;
+            const url = base + (window.location.search ? '&' : '?') + 'p=' + encodeURIComponent(data);
+            navigator.clipboard.writeText(url).then(() => alert('Link αντιγράφηκε! Κοινότυπέ το για να μοιραστείς τα μέρη σου.')).catch(() => prompt('Αντιγράψε το link:', url));
+        }
+
+        async function loadPlacesFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const p = params.get('p');
+            if (!p || !p.trim()) return;
+            const tokens = decodeURIComponent(p).split('|').filter(Boolean);
+            if (tokens.length === 0) return;
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('placesTitle').style.display = 'block';
+
+            for (const token of tokens) {
+                try {
+                    let placeData;
+                    if (token.startsWith('ChIJ')) {
+                        placeData = await getPlaceDetails(token);
+                    } else {
+                        const [latStr, lngStr] = token.split('~');
+                        const lat = parseFloat(latStr), lng = parseFloat(lngStr);
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            placeData = await findPlaceFromCoords(lat, lng, null);
+                        }
+                    }
+                    if (placeData) {
+                        addPlaceToMap(placeData);
+                        places.push(placeData);
+                    }
+                } catch (e) {}
+            }
+            updateDistances();
+            updateShareButtonVisibility();
         }
     </script>
     <script async defer
