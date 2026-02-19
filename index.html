@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#c0392b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -971,7 +971,8 @@
                 center: { lat: 37.9838, lng: 23.7275 },
                 zoom: 12,
                 mapTypeId: 'roadmap',
-                styles: mapStyles
+                styles: mapStyles,
+                gestureHandling: 'greedy'
             });
             placesService = new google.maps.places.PlacesService(map);
             geocoder = new google.maps.Geocoder();
