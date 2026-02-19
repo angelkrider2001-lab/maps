@@ -769,6 +769,7 @@
                     places.push(placeData);
                     updateDistances();
                     updateShareButtonVisibility();
+                    savePlacesToStorage();
                 } else {
                     throw new Error('Δεν βρέθηκε το μέρος');
                 }
@@ -1118,6 +1119,7 @@
                 else targetCard.before(draggedCard);
             }
             updateDistances();
+            savePlacesToStorage();
         }
 
         function removePlace(placeIdent) {
@@ -1138,6 +1140,7 @@
                 updateDistances();
             }
             updateShareButtonVisibility();
+            savePlacesToStorage();
         }
 
         function updateDistances() {
@@ -1193,12 +1196,15 @@
             document.getElementById('placesTitle').style.display = 'none';
             document.getElementById('distancesSection').style.display = 'none';
             updateShareButtonVisibility();
+            savePlacesToStorage();
         }
 
         function updateShareButtonVisibility() {
             const btn = document.getElementById('shareBtn');
             if (btn) btn.style.display = places.length > 0 ? 'inline-block' : 'none';
         }
+
+        const STORAGE_KEY = 'mapsExplorer_places';
 
         function buildShareData() {
             return places.map(p => {
@@ -1210,6 +1216,11 @@
             }).join('|');
         }
 
+        function savePlacesToStorage() {
+            if (places.length === 0) localStorage.removeItem(STORAGE_KEY);
+            else localStorage.setItem(STORAGE_KEY, buildShareData());
+        }
+
         function copyShareLink() {
             if (places.length === 0) return;
             const data = buildShareData();
@@ -1218,16 +1229,10 @@
             navigator.clipboard.writeText(url).then(() => alert('Link αντιγράφηκε! Κοινότυπέ το για να μοιραστείς τα μέρη σου.')).catch(() => prompt('Αντιγράψε το link:', url));
         }
 
-        async function loadPlacesFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const p = params.get('p');
-            if (!p || !p.trim()) return;
-            const tokens = decodeURIComponent(p).split('|').filter(Boolean);
-            if (tokens.length === 0) return;
-
+        async function loadPlacesFromTokens(tokens) {
+            if (!tokens || tokens.length === 0) return;
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('placesTitle').style.display = 'block';
-
             for (const token of tokens) {
                 try {
                     let placeData;
@@ -1248,6 +1253,22 @@
             }
             updateDistances();
             updateShareButtonVisibility();
+            savePlacesToStorage();
+        }
+
+        async function loadPlacesFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const p = params.get('p');
+            if (p && p.trim()) {
+                const tokens = decodeURIComponent(p).split('|').filter(Boolean);
+                await loadPlacesFromTokens(tokens);
+                return;
+            }
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored && stored.trim()) {
+                const tokens = stored.split('|').filter(Boolean);
+                await loadPlacesFromTokens(tokens);
+            }
         }
     </script>
     <script async defer
