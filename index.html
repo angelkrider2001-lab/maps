@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #c0392b;
+            --accent-hover: #a93226;
+            --bg-main: #f0efeb;
+            --bg-card: #ffffff;
+            --bg-input: #f5f5f5;
+            --text-primary: #2c3e50;
+            --text-secondary: #5d6d7e;
+            --border: #dfe6e9;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+
+        /* Header - burnt orange */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--accent);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-content h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .header-content .subtitle {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.9);
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        /* Sidebar - white card */
+        .sidebar {
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+        }
+
+        .input-section {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .input-section label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .link-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .link-input-wrapper input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .link-input-wrapper input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .link-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-input);
+        }
+
+        .sidebar-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 0.75rem 1rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .places-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 0;
+        }
+
+        .place-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0;
+            width: 100%;
+            flex-shrink: 0;
+            min-width: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .place-card:hover {
+            border-color: var(--accent);
+        }
+
+        .place-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(192,57,43,0.2);
+        }
+
+        .place-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .place-card .drag-handle {
+            cursor: grab;
+            padding: 0.25rem;
+            margin-right: 0.5rem;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .place-card .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .place-card.dragging {
+            opacity: 0.5;
+        }
+
+        .place-card.drag-over {
+            border-color: var(--accent);
+            background: rgba(192,57,43,0.08);
+        }
+
+        .place-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .place-remove {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1.2rem;
+            line-height: 1;
+            opacity: 0.7;
+        }
+
+        .place-remove:hover {
+            color: var(--accent);
+            opacity: 1;
+        }
+
+        .place-card .place-card-details {
+            display: none;
+            padding: 0 1rem 1rem;
+        }
+
+        .place-card.expanded .place-card-details {
+            display: block;
+        }
+
+        .place-card .place-card-header {
+            padding: 1rem;
+        }
+
+        .place-card .expand-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-right: 0.5rem;
+        }
+
+        .place-card .address {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .place-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .place-rating .stars {
+            color: #e67e22;
+        }
+
+        .place-photos {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .place-photos img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .place-reviews {
+            margin-top: 0.75rem;
+        }
+
+        .place-reviews .review {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .place-reviews .review:last-child {
+            border-bottom: none;
+        }
+
+        .place-opening-hours {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .place-opening-hours .hours-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+        }
+
+        .place-opening-hours .open-now {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .place-opening-hours .closed-now {
+            color: var(--accent);
+        }
+
+        .distances-section {
+            padding: 1rem;
+            background: var(--bg-main);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .distances-section h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            color: var(--accent);
+        }
+
+        .distance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .distance-row:last-child {
+            border-bottom: none;
+        }
+
+        .distance-info {
+            color: var(--accent);
+        }
+
+        /* Map container - white card with shadow */
+        .map-container {
+            position: relative;
+            margin: 0.75rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .empty-state {
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            margin-bottom: 1rem;
+        }
+
+        .loading-place {
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .log-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            background: var(--text-primary);
+            padding: 1rem;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+            color: white;
+            z-index: 1000;
+            display: none;
+        }
+
+        .log-panel.visible {
+            display: block;
+        }
+
+        .map-type-toggle {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 5;
+            display: flex;
+            gap: 0;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .map-type-toggle button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .map-type-toggle button.active {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+
+            .sidebar {
+                max-height: 40vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-content">
+                <h1>Google Maps Explorer</h1>
+                <p class="subtitle">Πρόσθεσε πολλά μέρη, εξερεύνησε αποστάσεις, αξιολογήσεις και λεπτομέρειες</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleLogs()">📋 Logs</button>
+                <button class="btn btn-secondary" onclick="copyLogs()">📤 Αντίγραψε logs</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Καθαρισμός όλων</button>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="input-section">
+                <label>Πρόσθεσε μέρος</label>
+                <div class="link-input-wrapper">
+                    <input type="text" id="mapLinkInput" placeholder="https://www.google.com/maps/place/..." 
+                           onkeypress="if(event.key==='Enter') addPlace()">
+                    <button class="btn btn-primary" onclick="addPlace()">Προσθήκη</button>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    Επικόλλησε link από Google Maps.
+                    <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;" style="color: var(--accent);">Δοκιμή</a>
+                </p>
+            </div>
+
+            <div class="distances-section" id="distancesSection" style="display: none;">
+                <h4>📏 Αποστάσεις μεταξύ μερών (με τη σειρά που τα έβαλες)</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Σύρε τα μέρη για να αλλάξεις τη σειρά</p>
+                <div id="distancesList"></div>
+            </div>
+
+            <div class="sidebar-section-title" id="placesTitle" style="display: none;">📍 Τα μέρη σου — πάτα 🦌 για λεπτομέρειες</div>
+            <div class="places-list" id="placesList">
+                <div class="empty-state" id="emptyState">
+                    <p><strong>Πρόσθεσε πολλά links από Google Maps</strong></p>
+                    <p>Θα δεις ταυτόχρονα για όλα: φωτογραφίες, αξιολογήσεις, ωράριο και αποστάσεις!</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="map-container">
+            <div class="map-type-toggle">
+                <button type="button" id="mapTypeBtn" class="active" onclick="setMapType('roadmap')">Χάρτης</button>
+                <button type="button" id="satelliteBtn" onclick="setMapType('satellite')">Satellite</button>
+            </div>
+            <div id="map"></div>
+        </main>
+
+        <div class="log-panel" id="logPanel">
+            <div style="margin-bottom: 0.5rem; font-weight: bold;">📋 Debug Logs</div>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyDc__yRSw8pvfjlthJ6YlQ9AH8qbbZXXCg';
+        let map;
+        const logs = [];
+
+        function log(msg, type = 'info') {
+            const t = new Date().toLocaleTimeString('el-GR');
+            const entry = { t, msg, type };
+            logs.push(entry);
+            const el = document.getElementById('logContent');
+            if (el) {
+                const div = document.createElement('div');
+                div.className = 'log-entry log-' + type;
+                div.textContent = `[${t}] ${msg}`;
+                el.appendChild(div);
+            }
+        }
+
+        function toggleLogs() {
+            document.getElementById('logPanel').classList.toggle('visible');
+        }
+
+        function copyLogs() {
+            const text = logs.map(l => `[${l.t}] ${l.msg}`).join('\n');
+            navigator.clipboard.writeText(text).then(() => alert('Logs αντιγράφηκαν!')).catch(() => prompt('Αντιγράψε manually:', text));
+        }
+        let placesService;
+        let geocoder;
+        let markers = [];
+        let places = [];
+        let directionsService;
+        let directionsRenderer;
+        let PlaceInfoOverlay;
+        let RouteLabelOverlay;
+        let routeLabelOverlays = [];
+
+        function initMap() {
+            log('initMap: Αρχικοποίηση χάρτη...');
+            PlaceInfoOverlay = class extends google.maps.OverlayView {
+                constructor(position, place, map) {
+                    super();
+                    this.position = position;
+                    this.place = place;
+                    this.map = map;
+                    this.div = null;
+                }
+                onAdd() {
+                    const div = document.createElement('div');
+                    div.className = 'map-place-card';
+                    div.style.cssText = 'position:absolute;background:#fff;border:1px solid #dfe6e9;border-radius:10px;padding:8px;max-width:200px;box-shadow:0 2px 12px rgba(0,0,0,0.12);cursor:pointer;z-index:10;';
+                    const mapsUrl = this.place.place_id ? `https://www.google.com/maps/place/?q=place_id:${this.place.place_id}` : `https://www.google.com/maps?q=${this.position.lat()},${this.position.lng()}`;
+                    let img = '';
+                    if (this.place.photos && this.place.photos.length > 0) {
+                        img = `<a href="${mapsUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;cursor:pointer;"><img src="${this.place.photos[0].getUrl({maxWidth:120,maxHeight:80})}" style="width:100%;height:70px;object-fit:cover;border-radius:6px;margin-bottom:6px;" alt="Άνοιγμα σε Google Maps"></a>`;
+                    }
+                    const rating = this.place.rating ? `⭐ ${this.place.rating}` : '';
+                    const hours = this.place.opening_hours ? (this.place.opening_hours.open_now ? '🟢 Ανοιχτό' : '🔴 Κλειστό') : '';
+                    div.innerHTML = img + `<div style="font-size:13px;font-weight:600;color:#2c3e50;">${this.place.name}</div><div style="font-size:11px;color:#5d6d7e;">${rating} ${hours}</div>`;
+                    this.div = div;
+                    const panes = this.getPanes();
+                    panes.overlayMouseTarget.appendChild(div);
+                    const self = this;
+                    div.addEventListener('click', (e) => {
+                        if (e.target.tagName === 'A' || e.target.closest('a')) return;
+                        if (window.lastInfoWindow) window.lastInfoWindow.close();
+                        const iw = new google.maps.InfoWindow({ content: buildInfoContent(self.place) });
+                        iw.open(this.map, { position: self.position });
+                        window.lastInfoWindow = iw;
+                    });
+                }
+                draw() {
+                    if (!this.div || !this.position) return;
+                    const proj = this.getProjection();
+                    if (!proj) return;
+                    const point = proj.fromLatLngToDivPixel(this.position);
+                    if (point) {
+                        this.div.style.left = (point.x - this.div.offsetWidth / 2) + 'px';
+                        this.div.style.top = (point.y + 25) + 'px';
+                    }
+                }
+                onRemove() {
+                    if (this.div && this.div.parentNode) this.div.parentNode.removeChild(this.div);
+                    this.div = null;
+                }
+            };
+            RouteLabelOverlay = class extends google.maps.OverlayView {
+                constructor(position, text, map) {
+                    super();
+                    this.position = position;
+                    this.text = text;
+                    this.div = null;
+                }
+                onAdd() {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'position:absolute;background:#c0392b;color:white;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:9;pointer-events:none;';
+                    div.textContent = this.text;
+                    this.div = div;
+                    this.getPanes().overlayMouseTarget.appendChild(div);
+                }
+                draw() {
+                    if (!this.div || !this.position) return;
+                    const proj = this.getProjection();
+                    if (!proj) return;
+                    const point = proj.fromLatLngToDivPixel(this.position);
+                    if (point) {
+                        this.div.style.left = (point.x - this.div.offsetWidth / 2) + 'px';
+                        this.div.style.top = (point.y - 20) + 'px';
+                    }
+                }
+                onRemove() {
+                    if (this.div && this.div.parentNode) this.div.parentNode.removeChild(this.div);
+                    this.div = null;
+                }
+            };
+            const mapStyles = [
+                { elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'administrative', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'transit', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] }
+            ];
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 37.9838, lng: 23.7275 },
+                zoom: 12,
+                mapTypeId: 'roadmap',
+                styles: mapStyles
+            });
+            placesService = new google.maps.places.PlacesService(map);
+            geocoder = new google.maps.Geocoder();
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({ suppressMarkers: true, polylineOptions: { strokeColor: '#c0392b', strokeWeight: 5 } });
+            const CityLabelOverlay = class extends google.maps.OverlayView {
+                constructor(position, text) {
+                    super();
+                    this.position = position;
+                    this.text = text;
+                }
+                onAdd() {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'position:absolute;color:#1a1a1a;font-size:13px;font-weight:600;font-family:Inter,sans-serif;white-space:nowrap;z-index:8;pointer-events:none;';
+                    div.textContent = this.text;
+                    this.div = div;
+                    this.getPanes().overlayMouseTarget.appendChild(div);
+                }
+                draw() {
+                    if (!this.div || !this.position) return;
+                    const proj = this.getProjection();
+                    if (!proj) return;
+                    const point = proj.fromLatLngToDivPixel(this.position);
+                    if (point) {
+                        this.div.style.left = (point.x - this.div.offsetWidth / 2) + 'px';
+                        this.div.style.top = (point.y - 8) + 'px';
+                    }
+                }
+                onRemove() {
+                    if (this.div && this.div.parentNode) this.div.parentNode.removeChild(this.div);
+                    this.div = null;
+                }
+            };
+            const greekCities = [
+                { name: 'Αθήνα', lat: 37.9838, lng: 23.7275 },
+                { name: 'Θεσσαλονίκη', lat: 40.6401, lng: 22.9444 },
+                { name: 'Πάτρα', lat: 38.2466, lng: 21.7346 },
+                { name: 'Λάρισα', lat: 39.6390, lng: 22.4191 },
+                { name: 'Βόλος', lat: 39.3666, lng: 22.9442 },
+                { name: 'Ιωάννινα', lat: 39.6650, lng: 20.8537 },
+                { name: 'Τρίκαλα', lat: 39.5550, lng: 21.7672 },
+                { name: 'Χαλκίδα', lat: 38.4636, lng: 23.6094 },
+                { name: 'Σέρρες', lat: 41.0852, lng: 23.5487 },
+                { name: 'Αλεξανδρούπολη', lat: 40.8475, lng: 25.8744 },
+                { name: 'Ξάνθη', lat: 41.1344, lng: 24.8883 },
+                { name: 'Κατερίνη', lat: 40.2699, lng: 22.5069 },
+                { name: 'Αγρίνιο', lat: 38.6214, lng: 21.4078 },
+                { name: 'Καλαμάτα', lat: 37.0382, lng: 22.1142 },
+                { name: 'Καβάλα', lat: 40.9397, lng: 24.4014 },
+                { name: 'Λαμία', lat: 38.8993, lng: 22.4342 },
+                { name: 'Κομοτηνή', lat: 41.1224, lng: 25.4052 },
+                { name: 'Δράμα', lat: 41.1511, lng: 24.1397 },
+                { name: 'Βέροια', lat: 40.5236, lng: 22.2034 },
+                { name: 'Κοζάνη', lat: 40.3006, lng: 21.7890 },
+                { name: 'Καρδίτσα', lat: 39.3646, lng: 21.9218 },
+                { name: 'Κόρινθος', lat: 37.9386, lng: 22.9321 },
+                { name: 'Πτολεμαΐδα', lat: 40.5147, lng: 21.6786 },
+                { name: 'Τρίπολη', lat: 37.5089, lng: 22.3797 },
+                { name: 'Πύργος', lat: 37.6751, lng: 21.4410 },
+                { name: 'Γιαννιτσά', lat: 40.7919, lng: 22.4075 },
+                { name: 'Κιλκίς', lat: 40.9939, lng: 22.8753 },
+                { name: 'Άργος', lat: 37.6333, lng: 22.7333 },
+                { name: 'Άρτα', lat: 39.1622, lng: 20.9853 },
+                { name: 'Μέγαρα', lat: 37.9947, lng: 23.3422 },
+                { name: 'Θήβα', lat: 38.3180, lng: 23.3190 },
+                { name: 'Λιβαδειά', lat: 38.4366, lng: 22.8736 },
+                { name: 'Πρέβεζα', lat: 38.9556, lng: 20.7503 },
+                { name: 'Καστοριά', lat: 40.5198, lng: 21.2682 },
+                { name: 'Σπάρτη', lat: 37.0739, lng: 22.4300 },
+                { name: 'Φλώρινα', lat: 40.7820, lng: 21.4097 },
+                { name: 'Έδεσσα', lat: 40.8011, lng: 22.0483 },
+                { name: 'Ναύπλιο', lat: 37.5677, lng: 22.8020 }
+            ];
+            greekCities.forEach(c => {
+                const label = new CityLabelOverlay(new google.maps.LatLng(c.lat, c.lng), c.name);
+                label.setMap(map);
+            });
+            log('initMap: OK - Χάρτης έτοιμος');
+        }
+
+        function togglePlaceCard(placeIdent) {
+            const card = document.querySelector(`[data-place-id="${placeIdent}"]`);
+            if (card) card.classList.toggle('expanded');
+        }
+
+        function setMapType(type) {
+            if (!map) return;
+            map.setMapTypeId(type === 'satellite' ? 'hybrid' : 'roadmap');
+            document.getElementById('mapTypeBtn').classList.toggle('active', type === 'roadmap');
+            document.getElementById('satelliteBtn').classList.toggle('active', type === 'satellite');
+        }
+
+        // Parse Google Maps URL to extract coordinates or place info
+        function parseGoogleMapsUrl(url) {
+            if (!url || !url.trim()) return null;
+            url = url.trim();
+            log('parseGoogleMapsUrl: ' + url.substring(0, 80) + '...');
+
+            // Extract place name from /place/Name/ (often before @)
+            let placeName = null;
+            const placeNameMatch = url.match(/\/place\/([^/@]+)/);
+            if (placeNameMatch) {
+                placeName = decodeURIComponent(placeNameMatch[1].replace(/\+/g, ' ').replace(/%2C/g, ','));
+                log('parseGoogleMapsUrl: Βρέθηκε όνομα μέρους: ' + placeName);
+            }
+
+            // Extract coordinates from @lat,lng pattern
+            const coordMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+            if (coordMatch) {
+                const lat = parseFloat(coordMatch[1]);
+                const lng = parseFloat(coordMatch[2]);
+                log('parseGoogleMapsUrl: Βρέθηκαν συντεταγμένες: ' + lat + ', ' + lng);
+                return {
+                    type: 'coords',
+                    lat, lng,
+                    placeName: placeName || undefined
+                };
+            }
+
+            // Extract place_id (ChIJ... format)
+            const placeIdMatch = url.match(/(ChIJ[a-zA-Z0-9_-]{20,})/);
+            if (placeIdMatch) {
+                log('parseGoogleMapsUrl: Βρέθηκε place_id: ' + placeIdMatch[1]);
+                return { type: 'placeId', placeId: placeIdMatch[1] };
+            }
+
+            // Only place name, no coords
+            if (placeName) {
+                log('parseGoogleMapsUrl: Χρήση μόνο όνομα: ' + placeName);
+                return { type: 'text', query: placeName };
+            }
+
+            log('parseGoogleMapsUrl: Αποτυχία - δεν αναγνωρίστηκε το link');
+            return null;
+        }
+
+        async function addPlace() {
+            if (!map || !placesService) {
+                log('addPlace: Χάρτης δεν έχει φορτωθεί ακόμα! Περίμενε...', 'error');
+                alert('Περίμενε να φορτώσει ο χάρτης...');
+                return;
+            }
+            const input = document.getElementById('mapLinkInput');
+            const url = input.value.trim();
+            if (!url) return;
+
+            log('addPlace: Ξεκινάμε για URL...');
+            const parsed = parseGoogleMapsUrl(url);
+            if (!parsed) {
+                alert('Μη έγκυρο link. Χρησιμοποίησε ένα πλήρες link από το Google Maps (π.χ. google.com/maps/place/...)');
+                return;
+            }
+
+            input.value = '';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('placesTitle').style.display = 'block';
+
+            const loadingCard = createLoadingCard();
+            document.getElementById('placesList').appendChild(loadingCard);
+
+            try {
+                log('addPlace: parsed = ' + JSON.stringify(parsed));
+                let placeData;
+                if (parsed.type === 'placeId') {
+                    log('addPlace: Προσπάθεια getPlaceDetails με placeId');
+                    placeData = await getPlaceDetails(parsed.placeId);
+                } else if (parsed.type === 'coords') {
+                    log('addPlace: Προσπάθεια findPlaceFromCoords ' + parsed.lat + ',' + parsed.lng + (parsed.placeName ? ' name=' + parsed.placeName : ''));
+                    placeData = await findPlaceFromCoords(parsed.lat, parsed.lng, parsed.placeName);
+                } else {
+                    log('addPlace: Προσπάθεια findPlaceFromText: ' + parsed.query);
+                    placeData = await findPlaceFromText(parsed.query);
+                }
+
+                if (placeData) {
+                    log('addPlace: Επιτυχία! ' + placeData.name, 'success');
+                    addPlaceToMap(placeData);
+                    places.push(placeData);
+                    updateDistances();
+                } else {
+                    throw new Error('Δεν βρέθηκε το μέρος');
+                }
+            } catch (err) {
+                log('addPlace: ΣΦΑΛΜΑ - ' + (err.message || err), 'error');
+                alert('Σφάλμα: ' + (err.message || 'Δεν ήταν δυνατή η φόρτωση του μέρους'));
+            } finally {
+                loadingCard.remove();
+            }
+        }
+
+        function createLoadingCard() {
+            const div = document.createElement('div');
+            div.className = 'loading-place';
+            div.style.minWidth = '120px';
+            div.style.flexShrink = '0';
+            div.innerHTML = '⏳ Φόρτωση...';
+            return div;
+        }
+
+        function getPlaceDetails(placeId) {
+            log('getPlaceDetails: placeId=' + placeId);
+            return new Promise((resolve, reject) => {
+                const request = {
+                    placeId,
+                    fields: ['name', 'geometry', 'formatted_address', 'photos', 'reviews', 'rating',
+                             'user_ratings_total', 'opening_hours', 'place_id']
+                };
+                placesService.getDetails(request, (place, status) => {
+                    log('getPlaceDetails: status=' + status + (place ? ' name=' + place.name : ''));
+                    if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+                        resolve(enrichPlaceData(place));
+                    } else {
+                        reject(new Error('getPlaceDetails failed: ' + status));
+                    }
+                });
+            });
+        }
+
+        function findPlaceFromCoords(lat, lng, placeName) {
+            const location = new google.maps.LatLng(lat, lng);
+
+            const tryFindPlaceFromQuery = () => {
+                if (!placeName || placeName.length < 2) return Promise.reject(new Error('No place name'));
+                log('findPlaceFromCoords: findPlaceFromQuery με "' + placeName + '"');
+                return new Promise((resolve, reject) => {
+                    const request = {
+                        query: placeName,
+                        fields: ['place_id', 'name', 'geometry'],
+                        locationBias: { lat, lng }
+                    };
+                    placesService.findPlaceFromQuery(request, (results, status) => {
+                        log('findPlaceFromQuery status: ' + status + ', results: ' + (results ? results.length : 0));
+                        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+                            log('findPlaceFromQuery: Βρέθηκε place_id ' + results[0].place_id);
+                            getPlaceDetails(results[0].place_id).then(resolve).catch(reject);
+                        } else {
+                            reject(new Error('findPlaceFromQuery: ' + status));
+                        }
+                    });
+                });
+            };
+
+            const tryGeocoder = () => {
+                log('findPlaceFromCoords: Geocoder reverse geocode...');
+                return new Promise((resolve, reject) => {
+                    geocoder.geocode({ location }, (geoResults, geoStatus) => {
+                        log('Geocoder status: ' + geoStatus + ', results: ' + (geoResults ? geoResults.length : 0));
+                        if (geoStatus === 'OK' && geoResults && geoResults.length > 0) {
+                            const p = geoResults[0];
+                            if (p.place_id) {
+                                log('Geocoder: place_id ' + p.place_id + ' - getPlaceDetails');
+                                getPlaceDetails(p.place_id).then(resolve).catch(() => {
+                                    const placeData = createMinimalPlace(lat, lng, p.formatted_address, p.place_id);
+                                    resolve(placeData);
+                                });
+                            } else {
+                                resolve(createMinimalPlace(lat, lng, p.formatted_address, null));
+                            }
+                        } else {
+                            resolve(createMinimalPlace(lat, lng, null, null));
+                        }
+                    });
+                });
+            };
+
+            const createMinimalPlace = (la, lo, addr, pid) => ({
+                name: placeName || addr || `Θέση (${la.toFixed(4)}, ${lo.toFixed(4)})`,
+                geometry: { location: new google.maps.LatLng(la, lo) },
+                formatted_address: addr || '',
+                place_id: pid,
+                photos: [], reviews: [], rating: null, user_ratings_total: 0, opening_hours: null
+            });
+
+            return tryFindPlaceFromQuery().catch(() => tryGeocoder());
+        }
+
+        function findPlaceFromText(query) {
+            log('findPlaceFromText: query=' + query);
+            return new Promise((resolve, reject) => {
+                const request = {
+                    query,
+                    fields: ['place_id']
+                };
+                placesService.findPlaceFromQuery(request, (results, status) => {
+                    log('findPlaceFromText: status=' + status + ', results=' + (results ? results.length : 0));
+                    if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+                        getPlaceDetails(results[0].place_id).then(resolve).catch(reject);
+                    } else {
+                        reject(new Error('Δεν βρέθηκε μέρος για: ' + query + ' (status: ' + status + ')'));
+                    }
+                });
+            });
+        }
+
+        function enrichPlaceData(place) {
+            return {
+                ...place,
+                geometry: place.geometry,
+                name: place.name || 'Άγνωστο',
+                formatted_address: place.formatted_address || '',
+                photos: place.photos || [],
+                reviews: (place.reviews || []).slice(0, 3),
+                rating: place.rating,
+                user_ratings_total: place.user_ratings_total || 0,
+                opening_hours: place.opening_hours || null
+            };
+        }
+
+        function addPlaceToMap(place) {
+            if (!PlaceInfoOverlay) return;
+            const marker = new google.maps.Marker({
+                position: place.geometry.location,
+                map,
+                title: place.name
+            });
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: buildInfoContent(place)
+            });
+
+            const overlay = new PlaceInfoOverlay(place.geometry.location, place, map);
+            overlay.setMap(map);
+
+            const openInfo = () => {
+                if (window.lastInfoWindow) window.lastInfoWindow.close();
+                infoWindow.open(map, marker);
+                window.lastInfoWindow = infoWindow;
+                document.querySelectorAll('.place-card').forEach(c => c.classList.remove('active'));
+                const card = document.querySelector(`[data-place-id="${place.place_id || 'loc_' + place.geometry.location.lat() + '_' + place.geometry.location.lng()}"]`);
+                if (card) card.classList.add('active');
+            };
+
+            marker.addListener('click', openInfo);
+
+            markers.push({ marker, place, overlay });
+            map.panTo(place.geometry.location);
+
+            if (places.length === 1) {
+                map.setZoom(15);
+                clearRoute();
+            } else if (places.length > 1) {
+                const bounds = new google.maps.LatLngBounds();
+                markers.forEach(({ marker }) => bounds.extend(marker.getPosition()));
+                map.fitBounds(bounds, 50);
+                updateRoute();
+            }
+
+            addPlaceCard(place);
+        }
+
+        function clearRoute() {
+            directionsRenderer.setMap(null);
+            clearRouteLabels();
+        }
+
+        function clearRouteLabels() {
+            routeLabelOverlays.forEach(o => o.setMap(null));
+            routeLabelOverlays = [];
+        }
+
+        function updateRoute() {
+            if (places.length < 2) {
+                clearRoute();
+                clearRouteLabels();
+                return;
+            }
+            const origin = places[0].geometry.location;
+            const destination = places[places.length - 1].geometry.location;
+            const waypoints = places.slice(1, -1).map(p => ({ location: p.geometry.location, stopover: true }));
+            directionsService.route({
+                origin,
+                destination,
+                waypoints,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    directionsRenderer.setMap(map);
+                    clearRouteLabels();
+                    const legs = result.routes[0].legs;
+                    legs.forEach(leg => {
+                        let path = [];
+                        leg.steps.forEach(step => {
+                            if (step.path) path = path.concat(step.path);
+                        });
+                        if (path.length > 0) {
+                            const midIdx = Math.floor(path.length / 2);
+                            const midPos = path[midIdx];
+                            const labelText = leg.distance.text + ' • ' + leg.duration.text;
+                            const labelOverlay = new RouteLabelOverlay(midPos, labelText, map);
+                            labelOverlay.setMap(map);
+                            routeLabelOverlays.push(labelOverlay);
+                        }
+                    });
+                } else {
+                    clearRoute();
+                    clearRouteLabels();
+                }
+            });
+        }
+
+        function buildInfoContent(place) {
+            const mapsUrl = place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : `https://www.google.com/maps?q=${place.geometry.location.lat()},${place.geometry.location.lng()}`;
+            let html = `<div style="max-width: 340px; font-family: 'Inter', sans-serif; color: #2c3e50;">`;
+            html += `<h3 style="margin: 0 0 8px; font-size: 16px;">${place.name}</h3>`;
+            if (place.formatted_address) html += `<p style="font-size: 12px; color: #64748b; margin: 0 0 8px;">${place.formatted_address}</p>`;
+            if (place.rating) html += `<p style="margin: 0 0 8px; font-weight: 600;">⭐ ${place.rating} <span style="color:#64748b;font-weight:400">(${place.user_ratings_total} αξιολογήσεις)</span></p>`;
+            if (place.photos && place.photos.length > 0) {
+                const urls = place.photos.slice(0, 4).map(p => p.getUrl({ maxWidth: 150, maxHeight: 150 }));
+                html += `<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">` + urls.map(u => `<a href="${mapsUrl}" target="_blank"><img src="${u}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;cursor:pointer;" alt="Άνοιγμα σε Google Maps"></a>`).join('') + `</div>`;
+            }
+            if (place.reviews && place.reviews.length > 0) {
+                html += `<div style="font-size: 11px; color: #475569; margin-bottom: 8px; max-height: 80px; overflow-y: auto;">`;
+                place.reviews.forEach(r => { html += `<p style="margin: 4px 0;">${r.rating}⭐ ${(r.text || '').substring(0, 80)}...</p>`; });
+                html += `</div>`;
+            }
+            if (place.opening_hours) {
+                html += `<div style="font-size: 12px; border-top: 1px solid #e2e8f0; padding-top: 8px;">`;
+                html += place.opening_hours.open_now ? '🟢 <strong>Ανοιχτό τώρα</strong>' : '🔴 <strong>Κλειστό</strong>';
+                if (place.opening_hours.weekday_text) {
+                    html += '<div style="margin-top: 6px; font-size: 11px;">' + place.opening_hours.weekday_text.map(r => r.replace(':', ': ')).join('<br>') + '</div>';
+                }
+                html += `</div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function addPlaceCard(place) {
+            const card = document.createElement('div');
+            card.className = 'place-card';
+            const placeIdent = place.place_id || ('loc_' + place.geometry.location.lat() + '_' + place.geometry.location.lng());
+            card.dataset.placeId = placeIdent;
+            card.draggable = true;
+
+            let photosHtml = '';
+            if (place.photos && place.photos.length > 0) {
+                const photoUrls = place.photos.slice(0, 4).map(p => 
+                    p.getUrl({ maxWidth: 160, maxHeight: 160 })
+                );
+                photosHtml = `<div class="place-photos">${photoUrls.map(url => `<img src="${url}" alt="">`).join('')}</div>`;
+            }
+
+            let reviewsHtml = '';
+            if (place.reviews && place.reviews.length > 0) {
+                reviewsHtml = `<div class="place-reviews">${place.reviews.map(r => 
+                    `<div class="review"><strong>${r.rating}⭐</strong> ${(r.text || '').substring(0, 100)}...</div>`
+                ).join('')}</div>`;
+            }
+
+            let hoursHtml = '';
+            if (place.opening_hours) {
+                const openText = place.opening_hours.open_now ? '<span class="open-now">🟢 Ανοιχτό τώρα</span>' : '<span class="closed-now">🔴 Κλειστό</span>';
+                let weekdays = '';
+                if (place.opening_hours.weekday_text) {
+                    weekdays = place.opening_hours.weekday_text.map(row => 
+                        `<div class="hours-row">${row.replace(':', ': ')}</div>`
+                    ).join('');
+                }
+                hoursHtml = `<div class="place-opening-hours">${openText}${weekdays ? '<div style="margin-top: 6px;">' + weekdays + '</div>' : ''}</div>`;
+            }
+
+            card.innerHTML = `
+                <div class="place-card-header">
+                    <span class="drag-handle" title="Σύρε για να αλλάξεις σειρά">⋮⋮</span>
+                    <button class="expand-btn" title="Εμφάνιση λεπτομερειών" onclick="event.stopPropagation(); togglePlaceCard('${placeIdent}')">🦌</button>
+                    <h3 style="flex:1">${place.name}</h3>
+                    <button class="place-remove" onclick="removePlace('${placeIdent}')" title="Αφαίρεση">×</button>
+                </div>
+                <div class="place-card-details">
+                    ${place.formatted_address ? `<div class="address">${place.formatted_address}</div>` : ''}
+                    ${place.rating ? `<div class="place-rating"><span class="stars">${'★'.repeat(Math.round(place.rating))}${'☆'.repeat(5-Math.round(place.rating))}</span> ${place.rating} (${place.user_ratings_total})</div>` : ''}
+                    ${photosHtml}
+                    ${reviewsHtml}
+                    ${hoursHtml}
+                </div>
+            `;
+
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('place-remove') && !e.target.classList.contains('drag-handle') && !e.target.classList.contains('expand-btn')) {
+                    map.panTo(place.geometry.location);
+                    map.setZoom(16);
+                    const iw = markers.find(m => (m.place.place_id || 'loc_' + m.place.geometry.location.lat() + '_' + m.place.geometry.location.lng()) === placeIdent);
+                    if (iw) google.maps.event.trigger(iw.marker, 'click');
+                }
+            });
+
+            card.addEventListener('dragstart', (e) => {
+                card.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', placeIdent);
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => card.classList.remove('dragging'));
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.types.includes('text/plain')) {
+                    e.dataTransfer.dropEffect = 'move';
+                    card.classList.add('drag-over');
+                }
+            });
+            card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.classList.remove('drag-over');
+                const fromId = e.dataTransfer.getData('text/plain');
+                if (fromId && fromId !== placeIdent) reorderPlaces(fromId, placeIdent);
+            });
+
+            document.getElementById('placesList').appendChild(card);
+        }
+
+        function reorderPlaces(fromPlaceId, toPlaceId) {
+            const fromIdx = places.findIndex(p => (p.place_id || 'loc_' + p.geometry.location.lat() + '_' + p.geometry.location.lng()) === fromPlaceId);
+            const toIdx = places.findIndex(p => (p.place_id || 'loc_' + p.geometry.location.lat() + '_' + p.geometry.location.lng()) === toPlaceId);
+            if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+            const [movedPlace] = places.splice(fromIdx, 1);
+            const [movedMarker] = markers.splice(fromIdx, 1);
+            places.splice(toIdx, 0, movedPlace);
+            markers.splice(toIdx, 0, movedMarker);
+            const placesList = document.getElementById('placesList');
+            const cards = [...placesList.querySelectorAll('.place-card')];
+            const draggedCard = cards.find(c => c.dataset.placeId === fromPlaceId);
+            const targetCard = cards.find(c => c.dataset.placeId === toPlaceId);
+            if (draggedCard && targetCard) {
+                if (fromIdx < toIdx) targetCard.after(draggedCard);
+                else targetCard.before(draggedCard);
+            }
+            updateDistances();
+        }
+
+        function removePlace(placeId) {
+            const idx = markers.findIndex(m => (m.place.place_id || 'loc_' + m.place.geometry.location.lat() + '_' + m.place.geometry.location.lng()) === placeId);
+            if (idx >= 0) {
+                markers[idx].marker.setMap(null);
+                if (markers[idx].overlay) markers[idx].overlay.setMap(null);
+                markers.splice(idx, 1);
+                places.splice(idx, 1);
+            }
+            document.querySelector(`[data-place-id="${placeId}"]`)?.remove();
+            if (places.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('placesTitle').style.display = 'none';
+                document.getElementById('distancesSection').style.display = 'none';
+                clearRoute();
+            } else {
+                updateDistances();
+            }
+        }
+
+        function updateDistances() {
+            const section = document.getElementById('distancesSection');
+            const list = document.getElementById('distancesList');
+            list.innerHTML = '';
+
+            if (places.length < 2) {
+                section.style.display = 'none';
+                clearRoute();
+                return;
+            }
+            section.style.display = 'block';
+            updateRoute();
+
+            const origins = places.map(p => p.geometry.location);
+            const dests = places.map(p => p.geometry.location);
+
+            const distanceMatrixService = new google.maps.DistanceMatrixService();
+            distanceMatrixService.getDistanceMatrix({
+                origins,
+                destinations: dests,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (response, status) => {
+                if (status !== 'OK') return;
+
+                for (let i = 0; i < places.length - 1; i++) {
+                    const j = i + 1;
+                    const el = response.rows[i].elements[j];
+                    if (el.status === 'OK') {
+                        const row = document.createElement('div');
+                        row.className = 'distance-row';
+                        row.innerHTML = `
+                            <span>${i + 1}. ${places[i].name} → ${places[j].name}</span>
+                            <span class="distance-info">${el.distance.text} • ${el.duration.text}</span>
+                        `;
+                        list.appendChild(row);
+                    }
+                }
+            });
+        }
+
+        function clearAll() {
+            markers.forEach(({ marker, overlay }) => {
+                marker.setMap(null);
+                if (overlay) overlay.setMap(null);
+            });
+            markers = [];
+            places = [];
+            clearRoute();
+            const placesList = document.getElementById('placesList');
+            placesList.innerHTML = '<div class="empty-state" id="emptyState"><p><strong>Πρόσθεσε πολλά links από Google Maps</strong></p><p>Θα δεις ταυτόχρονα για όλα: φωτογραφίες, αξιολογήσεις, ωράριο και αποστάσεις!</p></div>';
+            document.getElementById('placesTitle').style.display = 'none';
+            document.getElementById('distancesSection').style.display = 'none';
+        }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDc__yRSw8pvfjlthJ6YlQ9AH8qbbZXXCg&libraries=places&callback=initMap">
+    </script>
+</body>
+</html>
