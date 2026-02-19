@@ -58,6 +58,18 @@
             overscroll-behavior: none;
         }
 
+        body.full-map .sidebar,
+        body.full-map .distances-section { display: none !important; }
+        body.full-map .app-container { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+        body.full-map .map-container { grid-row: 1; margin: 0; border-radius: 0; }
+        .exit-full-map {
+            position: fixed; top: 12px; right: 12px; z-index: 100;
+            padding: 8px 14px; background: rgba(0,0,0,0.7); color: #fff;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+        }
+        .exit-full-map:hover { background: rgba(0,0,0,0.85); }
+
         /* Sidebar - white card */
         .sidebar {
             background: var(--bg-card);
@@ -202,6 +214,7 @@
 
         .icon-btn-row {
             display: flex;
+            flex-wrap: wrap;
             gap: 0.5rem;
             margin-top: 0.75rem;
         }
@@ -825,6 +838,7 @@
                     <button class="icon-btn icon-btn-mobile" id="sortBtn" onclick="openSortModal()" style="display:none" title="Ταξινόμηση σειράς">↕</button>
                     <button class="btn btn-sort-places" id="sortPlacesBtn" onclick="openSortModal()" style="display:none">Ταξινόμηση</button>
                     <button class="share-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link"><span class="share-text">Share</span><span class="share-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></span></button>
+                    <button class="share-btn" id="shareFullMapBtn" onclick="copyShareFullMapLink()" style="display:none" title="Link χάρτης full screen"><span class="share-text">Full map</span><span class="share-icon">🗺</span></button>
                     <button class="icon-btn" onclick="clearAll()" title="Καθαρισμός όλων">🗑</button>
                 </div>
             </div>
@@ -1717,8 +1731,11 @@
         }
 
         function updateShareButtonVisibility() {
-            const btn = document.getElementById('shareBtn');
-            if (btn) btn.style.display = places.length > 0 ? 'inline-flex' : 'none';
+            const visible = places.length > 0;
+            const shareBtn = document.getElementById('shareBtn');
+            if (shareBtn) shareBtn.style.display = visible ? 'inline-flex' : 'none';
+            const fullMapBtn = document.getElementById('shareFullMapBtn');
+            if (fullMapBtn) fullMapBtn.style.display = visible ? 'inline-flex' : 'none';
             updateSortButtonVisibility();
         }
 
@@ -1847,6 +1864,32 @@
             navigator.clipboard.writeText(url).then(() => alert('Link αντιγράφηκε! Κοινότυπέ το για να μοιραστείς τα μέρη σου.')).catch(() => prompt('Αντιγράψε το link:', url));
         }
 
+        function copyShareFullMapLink() {
+            if (places.length === 0) return;
+            const data = buildShareData();
+            const base = window.location.origin + window.location.pathname;
+            const url = base + '?p=' + encodeURIComponent(data) + '&full=1';
+            navigator.clipboard.writeText(url).then(() => alert('Link full map αντιγράφηκε! Άνοιξε το για χάρτη full screen.')).catch(() => prompt('Αντιγράψε το link:', url));
+        }
+
+        function applyFullMapMode() {
+            document.body.classList.add('full-map');
+            let btn = document.getElementById('exitFullMapBtn');
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.id = 'exitFullMapBtn';
+                btn.className = 'exit-full-map';
+                btn.textContent = '✕ Έξοδος';
+                btn.onclick = () => {
+                    document.body.classList.remove('full-map');
+                    btn.remove();
+                    const url = window.location.pathname;
+                    if (window.history.replaceState) window.history.replaceState({}, '', url);
+                };
+                document.body.appendChild(btn);
+            }
+        }
+
         async function loadPlacesFromTokens(tokens) {
             if (!tokens || tokens.length === 0) return;
             document.getElementById('emptyState').style.display = 'none';
@@ -1880,9 +1923,12 @@
             if (p && p.trim()) {
                 const tokens = decodeURIComponent(p).split('|').filter(Boolean);
                 await loadPlacesFromTokens(tokens);
+                const isFull = params.get('full') === '1';
                 params.delete('p');
+                params.delete('full');
                 const newUrl = params.toString() ? window.location.pathname + '?' + params : window.location.pathname;
                 if (window.history.replaceState) window.history.replaceState({}, '', newUrl);
+                if (isFull) applyFullMapMode();
                 return;
             }
             const stored = localStorage.getItem(STORAGE_KEY);
