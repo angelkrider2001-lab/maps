@@ -189,6 +189,44 @@
             border-color: var(--accent);
         }
 
+        .share-btn {
+            display: inline-flex;
+            align-items: stretch;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            overflow: hidden;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        .share-btn .share-text {
+            background: var(--accent);
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .share-btn .share-icon {
+            background: var(--accent-hover);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .share-btn:hover .share-text {
+            background: #d1402f;
+        }
+
+        .share-btn:hover .share-icon {
+            background: #962b21;
+        }
+
         .sort-modal-overlay {
             display: none;
             position: fixed;
@@ -701,7 +739,7 @@
                 <div class="icon-btn-row">
                     <button class="icon-btn icon-btn-mobile" id="sortBtn" onclick="openSortModal()" style="display:none" title="Ταξινόμηση σειράς">↕</button>
                     <button class="btn btn-sort-places" id="sortPlacesBtn" onclick="openSortModal()" style="display:none">Ταξινόμηση</button>
-                    <button class="icon-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link">📤</button>
+                    <button class="share-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link"><span class="share-text">SHARE</span><span class="share-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></span></button>
                     <button class="icon-btn" onclick="clearAll()" title="Καθαρισμός όλων">🗑</button>
                 </div>
             </div>
@@ -770,7 +808,7 @@
                     const div = document.createElement('div');
                     div.className = 'map-place-card';
                     div.style.cssText = 'position:absolute;background:#fff;border:1px solid #dfe6e9;border-radius:10px;padding:8px;max-width:200px;box-shadow:0 2px 12px rgba(0,0,0,0.12);cursor:pointer;z-index:10;';
-                    const mapsUrl = this.place.place_id ? `https://www.google.com/maps/place/?q=place_id:${this.place.place_id}` : `https://www.google.com/maps?q=${this.position.lat()},${this.position.lng()}`;
+                    const mapsUrl = buildMapsUrl(this.place, this.position);
                     let img = '';
                     if (this.place.photos && this.place.photos.length > 0) {
                         img = `<a href="${mapsUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;cursor:pointer;"><img src="${this.place.photos[0].getUrl({maxWidth:120,maxHeight:80})}" style="width:100%;height:70px;object-fit:cover;border-radius:6px;margin-bottom:6px;" alt="Άνοιγμα σε Google Maps"></a>`;
@@ -1262,8 +1300,18 @@
             });
         }
 
+        function buildMapsUrl(place, pos) {
+            const lat = pos ? pos.lat() : (place.geometry && place.geometry.location ? place.geometry.location.lat() : null);
+            const lng = pos ? pos.lng() : (place.geometry && place.geometry.location ? place.geometry.location.lng() : null);
+            const coord = (lat != null && lng != null) ? `${lat},${lng}` : null;
+            const q = encodeURIComponent(place.name || coord || '');
+            if (place.place_id && q) {
+                return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=${encodeURIComponent(place.place_id)}`;
+            }
+            return `https://www.google.com/maps/search/?api=1&query=${q}`;
+        }
         function buildInfoContent(place) {
-            const mapsUrl = place.place_id ? `https://www.google.com/maps/place/?q=place_id:${place.place_id}` : `https://www.google.com/maps?q=${place.geometry.location.lat()},${place.geometry.location.lng()}`;
+            const mapsUrl = buildMapsUrl(place, place.geometry && place.geometry.location ? place.geometry.location : null);
             let html = `<div style="max-width: 340px; font-family: 'Inter', sans-serif; color: #2c3e50;">`;
             html += `<h3 style="margin: 0 0 8px; font-size: 16px;">${place.name}</h3>`;
             if (place.formatted_address) html += `<p style="font-size: 12px; color: #64748b; margin: 0 0 8px;">${place.formatted_address}</p>`;
@@ -1471,7 +1519,7 @@
 
         function updateShareButtonVisibility() {
             const btn = document.getElementById('shareBtn');
-            if (btn) btn.style.display = places.length > 0 ? 'flex' : 'none';
+            if (btn) btn.style.display = places.length > 0 ? 'inline-flex' : 'none';
             updateSortButtonVisibility();
         }
 
