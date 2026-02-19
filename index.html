@@ -1878,6 +1878,9 @@
             if (p && p.trim()) {
                 const tokens = decodeURIComponent(p).split('|').filter(Boolean);
                 await loadPlacesFromTokens(tokens);
+                params.delete('p');
+                const newUrl = params.toString() ? window.location.pathname + '?' + params : window.location.pathname;
+                if (window.history.replaceState) window.history.replaceState({}, '', newUrl);
                 return;
             }
             const stored = localStorage.getItem(STORAGE_KEY);
