@@ -1,12 +1,18 @@
 {
+  "id": "https://angelkrider2001-lab.github.io/maps/",
   "name": "Maps Explorer",
   "short_name": "Maps Explorer",
   "description": "Σύγκρινε μέρη από Google Maps - φωτογραφίες, αξιολογήσεις, ωράριο και αποστάσεις",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
   "theme_color": "#c0392b",
   "orientation": "any",
+  "lang": "el",
+  "dir": "ltr",
+  "categories": ["travel", "utilities"],
   "icons": [
     {
       "src": "icon-192.png",
