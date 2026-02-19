@@ -232,12 +232,12 @@
             display: inline-flex;
             align-items: stretch;
             border: none;
-            border-radius: 0;
+            border-radius: 8px;
             cursor: pointer;
             overflow: hidden;
+            font-family: inherit;
             font-weight: 600;
-            font-size: 0.85rem;
-            letter-spacing: 0.05em;
+            font-size: 0.9rem;
         }
 
         .share-btn .share-text {
@@ -246,6 +246,7 @@
             padding: 0.5rem 1rem;
             display: flex;
             align-items: center;
+            border-radius: 8px 0 0 8px;
         }
 
         .share-btn .share-icon {
@@ -256,6 +257,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1rem;
+            border-radius: 0 8px 8px 0;
         }
 
         .share-btn:hover .share-text {
@@ -1716,12 +1718,14 @@
         function buildSortModalList() {
             const list = document.getElementById('sortModalList');
             list.innerHTML = '';
+            const isTouch = 'ontouchstart' in window;
             places.forEach((p, i) => {
                 const ident = p.place_id || ('loc_' + p.geometry.location.lat() + '_' + p.geometry.location.lng());
                 const div = document.createElement('div');
                 div.className = 'sort-modal-item';
-                div.draggable = true;
+                div.draggable = !isTouch;
                 div.dataset.placeId = ident;
+                div.style.touchAction = 'none';
                 const esc = (s) => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                 div.innerHTML = `<span class="sort-modal-num">${i + 1}</span><span class="drag-handle">⋮⋮</span><span class="sort-modal-name">${esc(p.name)}</span><button class="sort-modal-remove" onclick="event.stopPropagation(); removePlace('${ident}'); closeSortModal();" title="Αφαίρεση">×</button>`;
                 div.addEventListener('dragstart', (e) => {
@@ -1747,6 +1751,48 @@
                         buildSortModalList();
                     }
                 });
+                if (isTouch) {
+                    let dropTarget = null;
+                    const onTouchStart = (e) => {
+                        if (e.target.closest('.sort-modal-remove')) return;
+                        e.preventDefault();
+                        div.classList.add('dragging');
+                        const startY = e.touches[0].clientY;
+                        const onTouchMove = (ev) => {
+                            ev.preventDefault();
+                            const y = ev.touches[0].clientY;
+                            const items = list.querySelectorAll('.sort-modal-item');
+                            let over = null;
+                            items.forEach((it) => {
+                                const rect = it.getBoundingClientRect();
+                                const mid = rect.top + rect.height / 2;
+                                if (y >= rect.top && y <= rect.bottom) over = it;
+                            });
+                            list.querySelectorAll('.sort-modal-item').forEach((it) => it.classList.remove('drag-over'));
+                            if (over && over !== div) {
+                                over.classList.add('drag-over');
+                                dropTarget = over;
+                            } else dropTarget = null;
+                        };
+                        const onTouchEnd = (ev) => {
+                            ev.preventDefault();
+                            document.removeEventListener('touchmove', onTouchMove, { passive: false });
+                            document.removeEventListener('touchend', onTouchEnd, { passive: false });
+                            div.classList.remove('dragging');
+                            list.querySelectorAll('.sort-modal-item').forEach((it) => it.classList.remove('drag-over'));
+                            if (dropTarget) {
+                                const toId = dropTarget.dataset.placeId;
+                                if (toId !== ident) {
+                                    reorderPlaces(ident, toId);
+                                    buildSortModalList();
+                                }
+                            }
+                        };
+                        document.addEventListener('touchmove', onTouchMove, { passive: false });
+                        document.addEventListener('touchend', onTouchEnd, { passive: false });
+                    };
+                    div.addEventListener('touchstart', onTouchStart, { passive: false });
+                }
                 list.appendChild(div);
             });
         }
