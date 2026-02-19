@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#c0392b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -712,27 +712,29 @@
             .places-list.places-list-hidden { display: none !important; }
             #placesTitle { display: none !important; }
 
-            body {
+            html, body {
                 overflow-x: hidden;
                 overflow-y: auto;
-                min-height: 100vh;
+                min-height: 100%;
+                height: auto;
                 -webkit-overflow-scrolling: touch;
             }
 
             .app-container {
                 grid-template-columns: minmax(0, 1fr);
-                grid-template-rows: auto minmax(50vh, 1fr) auto;
+                grid-template-rows: auto 55vh auto;
                 width: 100%;
                 min-width: 0;
                 height: auto;
                 min-height: 100vh;
+                overflow: visible;
             }
 
             .sidebar {
                 min-width: 0;
                 max-height: none;
                 min-height: 0;
-                overflow: hidden;
+                overflow: visible;
                 overflow-x: hidden;
                 display: flex;
                 flex-direction: column;
