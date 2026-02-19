@@ -1463,12 +1463,21 @@
             routeLabelOverlays = [];
         }
 
+        let routeRequestId = 0;
+        let routeDebounceTimer;
         function updateRoute() {
             if (places.length < 2) {
                 clearRoute();
                 clearRouteLabels();
                 return;
             }
+            clearTimeout(routeDebounceTimer);
+            routeDebounceTimer = setTimeout(doUpdateRoute, 80);
+        }
+        function doUpdateRoute() {
+            if (places.length < 2) return;
+            routeRequestId++;
+            const myId = routeRequestId;
             const origin = places[0].geometry.location;
             const destination = places[places.length - 1].geometry.location;
             const waypoints = places.slice(1, -1).map(p => ({ location: p.geometry.location, stopover: true }));
@@ -1478,6 +1487,7 @@
                 waypoints,
                 travelMode: google.maps.TravelMode.DRIVING
             }, (result, status) => {
+                if (myId !== routeRequestId) return;
                 if (status === 'OK') {
                     directionsRenderer.setDirections(result);
                     directionsRenderer.setMap(map);
@@ -1508,7 +1518,7 @@
                             routeLabelOverlays.push(labelOverlay);
                         }
                     });
-                } else {
+                } else if (myId === routeRequestId) {
                     clearRoute();
                     clearRouteLabels();
                 }
