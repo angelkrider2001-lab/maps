@@ -922,9 +922,11 @@
                     if (point) {
                         const zoom = this.map && this.map.getZoom ? this.map.getZoom() : 0;
                         let scale = 1;
-                        if (zoom <= 9) scale = 0.62;
-                        else if (zoom <= 11) scale = 0.75;
-                        else if (zoom <= 13) scale = 0.9;
+                        if (zoom <= 5) scale = 0.32;
+                        else if (zoom <= 7) scale = 0.42;
+                        else if (zoom <= 9) scale = 0.55;
+                        else if (zoom <= 11) scale = 0.72;
+                        else if (zoom <= 13) scale = 0.88;
                         this.div.style.left = point.x + 'px';
                         this.div.style.top = (point.y + 25) + 'px';
                         this.div.style.transformOrigin = 'top center';
