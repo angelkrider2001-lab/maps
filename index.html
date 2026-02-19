@@ -35,8 +35,12 @@
         .app-container {
             display: grid;
             grid-template-columns: 420px 1fr;
-            grid-template-rows: 1fr;
+            grid-template-rows: 1fr auto;
             height: 100vh;
+        }
+
+        .map-container {
+            grid-row: 1 / -1;
         }
 
         /* Sidebar - white card */
@@ -47,6 +51,8 @@
             display: flex;
             flex-direction: column;
             box-shadow: var(--shadow);
+            grid-row: 1;
+            grid-column: 1;
         }
 
         .input-section {
@@ -142,6 +148,91 @@
         .icon-btn:hover {
             background: var(--bg-input);
             border-color: var(--accent);
+        }
+
+        .sort-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: var(--bg-main);
+            flex-direction: column;
+        }
+
+        .sort-modal-overlay.visible {
+            display: flex;
+        }
+
+        .sort-modal-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            flex-shrink: 0;
+        }
+
+        .sort-modal-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .sort-modal-close {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: var(--bg-input);
+            border-radius: 8px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .sort-modal-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sort-modal-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            cursor: grab;
+        }
+
+        .sort-modal-item:active {
+            cursor: grabbing;
+        }
+
+        .sort-modal-item .drag-handle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        .sort-modal-item span {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .sort-modal-item.dragging {
+            opacity: 0.5;
+        }
+
+        .sort-modal-item.drag-over {
+            border-color: var(--accent);
+            background: rgba(192,57,43,0.08);
+        }
+
+        .icon-btn-mobile {
+            display: none !important;
         }
 
         .sidebar-section-title {
@@ -334,6 +425,8 @@
             background: var(--bg-main);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            grid-row: 2;
+            grid-column: 1;
         }
 
         .distances-section h4 {
@@ -433,7 +526,19 @@
         @media (max-width: 900px) {
             .app-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: 1fr 1fr;
+                grid-template-rows: 1fr 1fr auto;
+            }
+
+            .map-container {
+                grid-row: auto;
+            }
+
+            .distances-section.distances-below-map {
+                grid-column: 1;
+                grid-row: 3;
+                margin: 0 0.5rem 0.5rem;
+                border-radius: 12px;
+                border: 1px solid var(--border);
             }
 
             .sidebar {
@@ -487,6 +592,10 @@
                 font-size: 0.9rem;
             }
 
+            .icon-btn-mobile {
+                display: flex;
+            }
+
             .map-container {
                 margin: 0.5rem;
             }
@@ -508,15 +617,10 @@
                     <a href="#" onclick="document.getElementById('mapLinkInput').value='https://www.google.com/maps/place/%CE%A0%CE%AC%CF%81%CE%BA%CE%BF+%CE%95%CE%BB%CE%B1%CF%86%CE%B9%CF%8E%CE%BD+%CE%91%CE%B3%CE%AF%CE%BF%CF%85+%CE%A0%CE%B1%CE%BD%CF%84%CE%B5%CE%BB%CE%B5%CE%AE%CE%BC%CE%BF%CE%BD%CE%BF%CF%82/@40.4330319,21.9298786,12.93z'; return false;" style="color: var(--text-secondary);">Δοκιμή</a>
                 </p>
                 <div class="icon-btn-row">
+                    <button class="icon-btn icon-btn-mobile" id="sortBtn" onclick="openSortModal()" style="display:none" title="Ταξινόμηση σειράς">↕</button>
                     <button class="icon-btn" id="shareBtn" onclick="copyShareLink()" style="display:none" title="Κοινή χρήση link">📤</button>
                     <button class="icon-btn" onclick="clearAll()" title="Καθαρισμός όλων">🗑</button>
                 </div>
-            </div>
-
-            <div class="distances-section" id="distancesSection" style="display: none;">
-                <h4>📏 Αποστάσεις μεταξύ μερών (με τη σειρά που τα έβαλες)</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Σύρε τα μέρη για να αλλάξεις τη σειρά</p>
-                <div id="distancesList"></div>
             </div>
 
             <div class="sidebar-section-title" id="placesTitle" style="display: none;">📍 Τα μέρη σου — πάτα 🦌 για λεπτομέρειες</div>
@@ -535,6 +639,20 @@
             </div>
             <div id="map"></div>
         </main>
+
+        <div class="distances-section distances-below-map" id="distancesSection" style="display: none;">
+            <h4>📏 Αποστάσεις μεταξύ μερών (με τη σειρά που τα έβαλες)</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Σύρε τα μέρη για να αλλάξεις τη σειρά</p>
+            <div id="distancesList"></div>
+        </div>
+
+        <div class="sort-modal-overlay" id="sortModal">
+            <div class="sort-modal-header">
+                <h3>Ταξινόμηση μερών — σύρε για αλλαγή σειράς</h3>
+                <button class="sort-modal-close" onclick="closeSortModal()">×</button>
+            </div>
+            <div class="sort-modal-list" id="sortModalList"></div>
+        </div>
 
     </div>
 
@@ -573,8 +691,8 @@
                         img = `<a href="${mapsUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;cursor:pointer;"><img src="${this.place.photos[0].getUrl({maxWidth:120,maxHeight:80})}" style="width:100%;height:70px;object-fit:cover;border-radius:6px;margin-bottom:6px;" alt="Άνοιγμα σε Google Maps"></a>`;
                     }
                     const rating = this.place.rating ? `⭐ ${this.place.rating}` : '';
-                    const hours = this.place.opening_hours ? (this.place.opening_hours.open_now ? '🟢 Ανοιχτό' : '🔴 Κλειστό') : '';
-                    div.innerHTML = img + `<div style="font-size:13px;font-weight:600;color:#2c3e50;">${this.place.name}</div><div style="font-size:11px;color:#5d6d7e;">${rating} ${hours}</div>`;
+                    const reviewsCount = (this.place.user_ratings_total || 0) > 0 ? `(${this.place.user_ratings_total} αξιολογήσεις)` : '';
+                    div.innerHTML = img + `<div style="font-size:13px;font-weight:600;color:#2c3e50;">${this.place.name}</div><div style="font-size:11px;color:#5d6d7e;">${rating} ${reviewsCount}</div>`;
                     this.div = div;
                     const panes = this.getPanes();
                     panes.overlayMouseTarget.appendChild(div);
@@ -723,6 +841,7 @@
             });
             log('initMap: OK - Χάρτης έτοιμος');
             loadPlacesFromUrl();
+            window.addEventListener('resize', updateSortButtonVisibility);
         }
 
         function togglePlaceCard(placeIdent) {
@@ -1258,6 +1377,60 @@
         function updateShareButtonVisibility() {
             const btn = document.getElementById('shareBtn');
             if (btn) btn.style.display = places.length > 0 ? 'flex' : 'none';
+            updateSortButtonVisibility();
+        }
+
+        function updateSortButtonVisibility() {
+            const btn = document.getElementById('sortBtn');
+            if (btn) btn.style.display = (places.length >= 2 && window.innerWidth <= 900) ? 'flex' : 'none';
+        }
+
+        function openSortModal() {
+            buildSortModalList();
+            document.getElementById('sortModal').classList.add('visible');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSortModal() {
+            document.getElementById('sortModal').classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+
+        function buildSortModalList() {
+            const list = document.getElementById('sortModalList');
+            list.innerHTML = '';
+            places.forEach((p, i) => {
+                const ident = p.place_id || ('loc_' + p.geometry.location.lat() + '_' + p.geometry.location.lng());
+                const div = document.createElement('div');
+                div.className = 'sort-modal-item';
+                div.draggable = true;
+                div.dataset.placeId = ident;
+                div.innerHTML = `<span class="drag-handle">⋮⋮</span><span>${i + 1}. ${p.name}</span>`;
+                div.addEventListener('dragstart', (e) => {
+                    div.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', ident);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                div.addEventListener('dragend', () => div.classList.remove('dragging'));
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.types.includes('text/plain')) {
+                        e.dataTransfer.dropEffect = 'move';
+                        div.classList.add('drag-over');
+                    }
+                });
+                div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    div.classList.remove('drag-over');
+                    const fromId = e.dataTransfer.getData('text/plain');
+                    if (fromId && fromId !== ident) {
+                        reorderPlaces(fromId, ident);
+                        buildSortModalList();
+                    }
+                });
+                list.appendChild(div);
+            });
         }
 
         const STORAGE_KEY = 'mapsExplorer_places';
