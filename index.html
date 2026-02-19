@@ -941,6 +941,7 @@
                         else if (zoom <= 9) scale = 0.55;
                         else if (zoom <= 11) scale = 0.72;
                         else if (zoom <= 13) scale = 0.88;
+                        if (window.innerWidth <= 900) scale *= 0.72;
                         this.div.style.left = point.x + 'px';
                         this.div.style.top = (point.y + 25) + 'px';
                         this.div.style.transformOrigin = 'top center';
